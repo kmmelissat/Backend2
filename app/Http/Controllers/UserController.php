@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateStoreUserRequest;
@@ -16,20 +17,21 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::query();
+        $usernameQuery = $request->query('username');
+        $emailQuery = $request->query('email');
 
-        if ($request->has('username')) {
-            $query->where('username', $request->input('username'));
+        $users = DB::table('users');
+
+        if ($usernameQuery) {
+            $users->where('username', 'like', '%'. $usernameQuery. '%');
         }
 
-        if ($request->has('email')) {
-            $query->where('email', $request->input('email'));
+        if ($emailQuery) {
+            $users->where('email', 'like', '%'. $emailQuery. '%');
         }
 
-        // If no filters are applied, return all users
-        $users = $query->get();
+        return response()->json(UserResource::collection($users->get()));
 
-        return response()->json(UserResource::collection($users));
     }
 
     /**
